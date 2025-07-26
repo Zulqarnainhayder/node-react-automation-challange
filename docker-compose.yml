@@ -1,0 +1,51 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: testdb
+    # Expose Postgres to host on 5433, but keep Docker internal port 5432
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - db
+
+  backend:
+    build: ./backend
+    ports:
+      - '4000:4000'
+    environment:
+      DATABASE_URL: postgres://testuser:testpass@db:5432/testdb
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
