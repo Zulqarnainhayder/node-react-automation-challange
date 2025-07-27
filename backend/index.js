@@ -40,8 +40,11 @@ const authenticateToken = (req, res, next) => {
   await pool.query(`CREATE TABLE IF NOT EXISTS items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
   )`);
+// Backfill created_at for existing rows if missing
+await pool.query(`UPDATE items SET created_at = NOW() WHERE created_at IS NULL`);
 
   // Seed test user if not exists
   const username = process.env.SEED_USER_USERNAME || 'test';
@@ -85,11 +88,13 @@ app.post('/login', async (req, res) => {
       { expiresIn: '24h' } // Token expires in 24 hours
     );
     
-    return res.status(200).json({ 
+    return res.status(200).json({
       token,
-      username: user.username,
-      userId: user.id,
-      email: user.email
+      user: {
+        userId: user.id,
+        username: user.username,
+        email: user.email
+      }
     });
   } catch (err) {
     res.status(500).json({ error: 'Database error' });
@@ -100,7 +105,11 @@ app.post('/login', async (req, res) => {
 app.get('/items', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM items ORDER BY id');
-    res.json(result.rows);
+    const items = result.rows.map(item => ({
+      ...item,
+      description: item.description || ''
+    }));
+    res.json(items);
   } catch (err) {
     res.status(500).json({ error: 'Database error' });
   }
@@ -114,10 +123,12 @@ app.post('/items', authenticateToken, async (req, res) => {
   }
   try {
     const result = await pool.query(
-      'INSERT INTO items (name, description) VALUES ($1, $2) RETURNING *',
+      'INSERT INTO items (name, description, created_at) VALUES ($1, $2, NOW()) RETURNING *',
       [name, description]
     );
-    res.status(201).json(result.rows[0]);
+    const item = result.rows[0];
+    item.description = item.description || '';
+    res.status(201).json(item);
   } catch (err) {
     res.status(500).json({ error: 'Database error' });
   }
@@ -126,19 +137,25 @@ app.post('/items', authenticateToken, async (req, res) => {
 // PUT /items/:id (protected)
 app.put('/items/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
+  if (isNaN(Number(id))) {
+    return res.status(400).json({ error: 'Invalid item ID format' });
+  }
   const { name, description } = req.body;
   if (!name) {
     return res.status(400).json({ error: 'Name is required' });
   }
   try {
+    // Only update fields that are provided
     const result = await pool.query(
-      'UPDATE items SET name = $1, description = $2 WHERE id = $3 RETURNING *',
+      'UPDATE items SET name = $1, description = COALESCE($2, description) WHERE id = $3 RETURNING *',
       [name, description, id]
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    res.json(result.rows[0]);
+    const item = result.rows[0];
+    item.description = item.description || '';
+    res.json(item);
   } catch (err) {
     res.status(500).json({ error: 'Database error' });
   }
@@ -147,12 +164,15 @@ app.put('/items/:id', authenticateToken, async (req, res) => {
 // DELETE /items/:id (protected)
 app.delete('/items/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
+  if (isNaN(Number(id))) {
+    return res.status(400).json({ error: 'Invalid item ID format' });
+  }
   try {
     const result = await pool.query('DELETE FROM items WHERE id = $1 RETURNING *', [id]);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    res.json(result.rows[0]);
+    res.json({ message: 'Item deleted successfully', ...result.rows[0] });
   } catch (err) {
     res.status(500).json({ error: 'Database error' });
   }

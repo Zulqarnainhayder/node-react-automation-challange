@@ -59,14 +59,19 @@ const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
       <h2 className="form-title">{editingItem ? 'Edit Item' : 'Create New Item'}</h2>
       
       <form onSubmit={handleSubmit}>
-        <Input
-          label="Item Name"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          placeholder="Enter item name"
-          required
-        />
+        <div className="form-group">
+          <Input
+            label="Item Name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder="Enter item name"
+            required
+          />
+          {!formData.name.trim() && (
+            <div className="input-error-text">Item Name is required</div>
+          )}
+        </div>
 
         <Textarea
           label="Description"
@@ -83,7 +88,7 @@ const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
             variant="primary" 
             loading={loading}
             className="submit-btn"
-            disabled={!formData.name.trim()}
+            disabled={!formData.name.trim() || loading}
           >
             {editingItem ? 'Update Item' : 'Create Item'}
           </Button>
