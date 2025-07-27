@@ -36,6 +36,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install docker-compose -y
 
+    - name: Create backend .env for CI
+      run: cp backend/.env.ci backend/.env
+
     - name: Build and start containers
       run: docker compose up -d --build
 
