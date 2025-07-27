@@ -1,112 +1,159 @@
 import { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
-import apiService from '../services/api';
+import Button from './UI/Button';
+import Input from './UI/Input';
+import Message from './UI/Message';
+import Card from './UI/Card';
 import './Login.css';
 
 const Login = () => {
-  const { state, dispatch } = useAppContext();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
+  const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const { dispatch } = useAppContext();
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    }
+    
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 3) {
+      newErrors.password = 'Password must be at least 3 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch({ type: 'SET_AUTH_LOADING', payload: true });
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setLoading(true);
+    setMessage('');
 
     try {
-      const response = await apiService.login(formData);
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: {
-          user: { username: response.username },
-          token: response.token
-        }
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      setFormData({ username: '', password: '' });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage('Login successful!');
+        setMessageType('success');
+        
+        // Store token and user info
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Update context
+        dispatch({ 
+          type: 'LOGIN_SUCCESS', 
+          payload: { 
+            user: data.user, 
+            token: data.token 
+          } 
+        });
+      } else {
+        setMessage(data.error || 'Login failed');
+        setMessageType('error');
+      }
     } catch (error) {
-      dispatch({ type: 'LOGIN_ERROR', payload: error.message });
+      setMessage('Network error. Please try again.');
+      setMessageType('error');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
-      <div className="login-card">
+      <Card className="login-card" padding="large">
         <div className="login-header">
-          <h1>Welcome Back</h1>
-          <p>Sign in to your account</p>
+          <h1 className="login-title">Item Manager</h1>
+          <p className="login-subtitle">Sign in to your account</p>
         </div>
+
+        {message && (
+          <Message 
+            type={messageType} 
+            onClose={() => setMessage('')}
+          >
+            {message}
+          </Message>
+        )}
 
         <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Enter your username"
-              required
-              disabled={state.authLoading}
-            />
-          </div>
+          <Input
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
+            placeholder="Enter your username"
+            error={errors.username}
+            required
+          />
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-              disabled={state.authLoading}
-            />
-          </div>
+          <Input
+            label="Password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="Enter your password"
+            error={errors.password}
+            required
+          />
 
-          <button 
+          <Button 
             type="submit" 
+            variant="primary" 
+            size="large"
+            loading={loading}
             className="login-btn"
-            disabled={state.authLoading}
           >
-            {state.authLoading ? (
-              <>
-                <span className="spinner"></span>
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </button>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </Button>
         </form>
 
-        {state.authError && (
-          <div className="error-message">
-            <span className="error-icon">⚠️</span>
-            {state.authError}
-          </div>
-        )}
-
-        {state.authSuccess && (
-          <div className="success-message">
-            <span className="success-icon">✅</span>
-            {state.authSuccess}
-          </div>
-        )}
-
         <div className="login-footer">
-          <p>Test credentials: <strong>test / password</strong></p>
+          <p>Demo credentials: <strong>test</strong> / <strong>test</strong></p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

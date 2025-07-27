@@ -11,7 +11,6 @@
   background: white;
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  padding: 40px;
   width: 100%;
   max-width: 400px;
   animation: slideUp 0.6s ease-out;
@@ -30,24 +29,26 @@
 
 .login-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
-.login-header h1 {
-  color: #333;
+.login-title {
+  color: #1e293b;
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 8px 0;
 }
 
-.login-header p {
-  color: #666;
-  font-size: 0.95rem;
+.login-subtitle {
+  color: #64748b;
+  font-size: 1rem;
   margin: 0;
 }
 
 .login-form {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .form-group {
@@ -84,6 +85,7 @@
 }
 
 .login-btn {
+  margin-top: 8px;
   width: 100%;
   padding: 14px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

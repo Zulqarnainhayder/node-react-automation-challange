@@ -1,4 +1,5 @@
 import { useAppContext } from '../context/AppContext';
+import Button from './UI/Button';
 import './Header.css';
 
 const Header = () => {
@@ -17,10 +18,15 @@ const Header = () => {
         </div>
         
         <div className="header-right">
-          <button onClick={handleLogout} className="logout-btn">
+          <Button 
+            onClick={handleLogout} 
+            variant="outline"
+            size="small"
+            className="logout-btn"
+          >
             <span className="logout-icon">🚪</span>
             Logout
-          </button>
+          </Button>
         </div>
       </div>
     </header>

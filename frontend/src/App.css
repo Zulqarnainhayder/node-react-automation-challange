@@ -19,6 +19,15 @@ html, body {
   line-height: 1.6;
 }
 
+/* Ensure all inputs have black text */
+input, textarea {
+  color: #1f2937 !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #6b7280;
+}
+
 #root {
   width: 100%;
   margin: 0;

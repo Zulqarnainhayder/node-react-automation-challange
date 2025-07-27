@@ -1,3 +1,5 @@
+import Button from './UI/Button';
+import Card from './UI/Card';
 import './ItemList.css';
 
 const ItemList = ({ items, loading, error, onEdit, onDelete, onRefresh }) => {
@@ -34,11 +36,18 @@ const ItemList = ({ items, loading, error, onEdit, onDelete, onRefresh }) => {
 
   return (
     <div className="item-list-container">
-      <div className="list-header">
+      <div className="items-header">
         <h2>Your Items ({items.length})</h2>
-        <button onClick={onRefresh} className="refresh-btn">
+        <Button 
+          onClick={onRefresh} 
+          variant="success"
+          size="small"
+          className="refresh-btn" 
+          disabled={loading}
+          loading={loading}
+        >
           🔄 Refresh
-        </button>
+        </Button>
       </div>
 
       {items.length === 0 ? (
@@ -49,32 +58,33 @@ const ItemList = ({ items, loading, error, onEdit, onDelete, onRefresh }) => {
         </div>
       ) : (
         <div className="items-grid">
-          {items.map((item) => (
-            <div key={item.id} className="item-card">
+          {items.map(item => (
+            <Card key={item.id} className="item-card" padding="medium">
               <div className="item-content">
                 <h3 className="item-name">{item.name}</h3>
-                {item.description && (
-                  <p className="item-description">{item.description}</p>
-                )}
+                <p className="item-description">{item.description || 'No description'}</p>
               </div>
-              
               <div className="item-actions">
-                <button 
-                  onClick={() => onEdit(item)}
+                <Button 
+                  onClick={() => onEdit(item)} 
+                  variant="secondary"
+                  size="small"
                   className="edit-btn"
-                  title="Edit item"
+                  disabled={loading}
                 >
                   ✏️ Edit
-                </button>
-                <button 
-                  onClick={() => onDelete(item.id)}
+                </Button>
+                <Button 
+                  onClick={() => onDelete(item.id)} 
+                  variant="danger"
+                  size="small"
                   className="delete-btn"
-                  title="Delete item"
+                  disabled={loading}
                 >
                   🗑️ Delete
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

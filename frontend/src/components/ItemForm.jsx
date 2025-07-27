@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useAppContext } from '../context/AppContext';
+import Button from './UI/Button';
+import Input from './UI/Input';
+import Textarea from './UI/Textarea';
+import Card from './UI/Card';
 import './ItemForm.css';
 
 const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
@@ -6,7 +11,7 @@ const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
     name: '',
     description: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (editingItem) {
@@ -19,7 +24,7 @@ const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
     }
   }, [editingItem]);
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -28,7 +33,7 @@ const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setLoading(true);
 
     try {
       if (editingItem) {
@@ -40,7 +45,7 @@ const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
     } catch (error) {
       console.error('Form submission error:', error);
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -50,73 +55,53 @@ const ItemForm = ({ onSubmit, editingItem, onCancel }) => {
   };
 
   return (
-    <div className="item-form-container">
-      <div className="form-header">
-        <h2>{editingItem ? 'Edit Item' : 'Create New Item'}</h2>
-        {editingItem && (
-          <button onClick={handleCancel} className="cancel-btn">
-            ✕
-          </button>
-        )}
-      </div>
+    <Card className="item-form" padding="medium">
+      <h2 className="form-title">{editingItem ? 'Edit Item' : 'Create New Item'}</h2>
+      
+      <form onSubmit={handleSubmit}>
+        <Input
+          label="Item Name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          placeholder="Enter item name"
+          required
+        />
 
-      <form onSubmit={handleSubmit} className="item-form">
-        <div className="form-group">
-          <label htmlFor="name">Item Name *</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter item name"
-            required
-            disabled={isSubmitting}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Enter item description (optional)"
-            rows="3"
-            disabled={isSubmitting}
-          />
-        </div>
+        <Textarea
+          label="Description"
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          placeholder="Enter item description (optional)"
+          rows={3}
+        />
 
         <div className="form-actions">
-          <button 
+          <Button 
             type="submit" 
+            variant="primary" 
+            loading={loading}
             className="submit-btn"
-            disabled={isSubmitting || !formData.name.trim()}
+            disabled={!formData.name.trim()}
           >
-            {isSubmitting ? (
-              <>
-                <span className="spinner"></span>
-                {editingItem ? 'Updating...' : 'Creating...'}
-              </>
-            ) : (
-              editingItem ? 'Update Item' : 'Create Item'
-            )}
-          </button>
-
+            {editingItem ? 'Update Item' : 'Create Item'}
+          </Button>
+          
           {editingItem && (
-            <button 
+            <Button 
               type="button" 
-              onClick={handleCancel}
-              className="cancel-action-btn"
-              disabled={isSubmitting}
+              variant="secondary" 
+              onClick={onCancel}
+              disabled={loading}
+              className="cancel-btn"
             >
               Cancel
-            </button>
+            </Button>
           )}
         </div>
       </form>
-    </div>
+    </Card>
   );
 };
 

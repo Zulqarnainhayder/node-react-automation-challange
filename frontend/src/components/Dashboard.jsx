@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import ItemList from './ItemList';
-import ItemForm from './ItemForm';
 import Header from './Header';
+import ItemForm from './ItemForm';
+import ItemList from './ItemList';
+import Message from './UI/Message';
 import apiService from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { state, dispatch } = useAppContext();
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
 
   useEffect(() => {
     fetchItems();
@@ -20,6 +23,8 @@ const Dashboard = () => {
       dispatch({ type: 'SET_ITEMS', payload: items });
     } catch (error) {
       dispatch({ type: 'SET_ITEMS_ERROR', payload: error.message });
+      setMessage(error.message);
+      setMessageType('error');
     }
   };
 
@@ -27,9 +32,12 @@ const Dashboard = () => {
     try {
       const newItem = await apiService.createItem(itemData);
       dispatch({ type: 'ADD_ITEM', payload: newItem });
-      setTimeout(() => dispatch({ type: 'CLEAR_MESSAGES' }), 3000);
+      setMessage('Item created successfully!');
+      setMessageType('success');
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      dispatch({ type: 'SET_ITEM_MESSAGE', payload: error.message });
+      setMessage(error.message);
+      setMessageType('error');
     }
   };
 
@@ -37,9 +45,12 @@ const Dashboard = () => {
     try {
       const updatedItem = await apiService.updateItem(id, itemData);
       dispatch({ type: 'UPDATE_ITEM', payload: updatedItem });
-      setTimeout(() => dispatch({ type: 'CLEAR_MESSAGES' }), 3000);
+      setMessage('Item updated successfully!');
+      setMessageType('success');
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      dispatch({ type: 'SET_ITEM_MESSAGE', payload: error.message });
+      setMessage(error.message);
+      setMessageType('error');
     }
   };
 
@@ -48,9 +59,12 @@ const Dashboard = () => {
       try {
         await apiService.deleteItem(id);
         dispatch({ type: 'DELETE_ITEM', payload: id });
-        setTimeout(() => dispatch({ type: 'CLEAR_MESSAGES' }), 3000);
+        setMessage('Item deleted successfully!');
+        setMessageType('success');
+        setTimeout(() => setMessage(''), 3000);
       } catch (error) {
-        dispatch({ type: 'SET_ITEM_MESSAGE', payload: error.message });
+        setMessage(error.message);
+        setMessageType('error');
       }
     }
   };
@@ -68,6 +82,15 @@ const Dashboard = () => {
       <Header />
       
       <div className="dashboard-content">
+        {message && (
+          <Message 
+            type={messageType} 
+            onClose={() => setMessage('')}
+          >
+            {message}
+          </Message>
+        )}
+        
         <div className="dashboard-grid">
           <div className="form-section">
             <ItemForm
@@ -88,15 +111,6 @@ const Dashboard = () => {
             />
           </div>
         </div>
-
-        {state.itemMessage && (
-          <div className={`message ${state.itemMessage.includes('error') || state.itemMessage.includes('failed') ? 'error' : 'success'}`}>
-            <span className="message-icon">
-              {state.itemMessage.includes('error') || state.itemMessage.includes('failed') ? '⚠️' : '✅'}
-            </span>
-            {state.itemMessage}
-          </div>
-        )}
       </div>
     </div>
   );
