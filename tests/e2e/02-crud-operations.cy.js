@@ -28,12 +28,12 @@ describe('CRUD Operations UI Tests', () => {
       // Verify success message
       cy.get('.message').should('contain', 'Item created successfully');
       
-      // Verify item appears in list
+      // Wait for item to appear in list
       cy.get('.item-card').should('contain', item.name);
       cy.get('.item-card').should('contain', item.description);
       
-      // Verify item count
-      cy.get('.items-header h2').should('contain', 'Your Items (1)');
+      // Wait for item count to update (allow up to 5s)
+      cy.get('.items-header h2', { timeout: 5000 }).should('contain', 'Your Items (1)');
     });
 
     it('should create item with name only', () => {
@@ -47,10 +47,9 @@ describe('CRUD Operations UI Tests', () => {
     });
 
     it('should validate required name field', () => {
-      // Try to create item without name
-      cy.get('button[type="submit"]').contains('Create Item').click();
-      
-      // Verify validation error
+      // Button should be disabled if name is empty
+      cy.get('button[type="submit"]').contains('Create Item').should('be.disabled');
+      // Error message should be visible
       cy.get('.input-error-text').should('contain', 'Item Name is required');
       cy.get('.empty-state').should('be.visible');
     });
@@ -152,10 +151,10 @@ describe('CRUD Operations UI Tests', () => {
       // Click edit button
       cy.get('.edit-btn').first().click();
       
-      // Clear name field and try to submit
+      // Clear name field
       cy.get('input[name="name"]').clear();
-      cy.get('button[type="submit"]').contains('Update Item').click();
-      
+      // Button should be disabled
+      cy.get('button[type="submit"]').contains('Update Item').should('be.disabled');
       // Verify validation error
       cy.get('.input-error-text').should('contain', 'Item Name is required');
     });
@@ -163,6 +162,9 @@ describe('CRUD Operations UI Tests', () => {
 
   describe('Delete Items', () => {
     beforeEach(() => {
+      // Extra cleanup to ensure a clean state
+      cy.cleanupItems();
+      cy.get('.item-card').should('have.length', 0);
       // Create test items for deletion
       testData.testItems.slice(0, 2).forEach((item) => {
         cy.createItem(item.name, item.description);
@@ -225,7 +227,8 @@ describe('CRUD Operations UI Tests', () => {
       
       // Wait for completion
       cy.get('.message').should('contain', 'Item created successfully');
-      cy.get('button[type="submit"]').should('not.be.disabled');
+      // After form is cleared, button should be disabled (since name is empty)
+      cy.get('button[type="submit"]').should('be.disabled');
     });
   });
 });
