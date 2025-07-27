@@ -39,6 +39,9 @@ jobs:
     - name: Create backend .env for CI
       run: cp backend/.env.ci backend/.env
 
+    - name: Create frontend .env for CI
+      run: cp frontend/.env.ci frontend/.env
+
     - name: Build and start containers
       run: docker compose up -d --build
 
