@@ -8,8 +8,7 @@ services:
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: testdb
     # Expose Postgres to host on 5433, but keep Docker internal port 5432
-    ports:
-      - '5433:5432'
+
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
