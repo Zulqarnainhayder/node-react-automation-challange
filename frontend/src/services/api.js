@@ -1,11 +1,28 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
 class ApiService {
+  // Get token from localStorage
+  getToken() {
+    try {
+      const authState = localStorage.getItem('authState');
+      if (authState) {
+        const { token } = JSON.parse(authState);
+        return token;
+      }
+    } catch (error) {
+      console.error('Error getting token from localStorage:', error);
+    }
+    return null;
+  }
+
   async request(endpoint, options = {}) {
     const url = `${API_URL}${endpoint}`;
+    const token = this.getToken();
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,

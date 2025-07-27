@@ -2,28 +2,58 @@ import { createContext, useContext, useReducer, useEffect } from 'react';
 
 const AppContext = createContext();
 
+// Check if JWT token is valid and not expired
+const isTokenValid = (token) => {
+  if (!token) return false;
+  
+  try {
+    // Decode JWT payload (without verification, just to check expiration)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Date.now() / 1000;
+    
+    // Check if token is expired
+    if (payload.exp && payload.exp < currentTime) {
+      console.log('Token expired');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error validating token:', error);
+    return false;
+  }
+};
+
 // Get initial state from localStorage
 const getInitialState = () => {
   try {
     const savedAuth = localStorage.getItem('authState');
     if (savedAuth) {
       const { user, token, isAuthenticated } = JSON.parse(savedAuth);
-      return {
-        // Auth state from localStorage
-        user,
-        token,
-        isAuthenticated,
-        authLoading: false,
-        authError: '',
-        authSuccess: '',
-        
-        // Items state (always start fresh)
-        items: [],
-        itemsLoading: false,
-        itemsError: '',
-        itemMessage: '',
-        editingItem: null,
-      };
+      
+      // Validate token before restoring state
+      if (isTokenValid(token)) {
+        return {
+          // Auth state from localStorage
+          user,
+          token,
+          isAuthenticated,
+          authLoading: false,
+          authError: '',
+          authSuccess: '',
+          
+          // Items state (always start fresh)
+          items: [],
+          itemsLoading: false,
+          itemsError: '',
+          itemMessage: '',
+          editingItem: null,
+        };
+      } else {
+        // Token is invalid/expired, clear localStorage
+        localStorage.removeItem('authState');
+        console.log('Invalid/expired token removed from localStorage');
+      }
     }
   } catch (error) {
     console.error('Error loading auth state from localStorage:', error);
