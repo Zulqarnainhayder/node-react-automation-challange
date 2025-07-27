@@ -1,0 +1,33 @@
+{
+  "name": "automation-tests",
+  "version": "1.0.0",
+  "description": "Automated testing suite for React/Node.js application",
+  "scripts": {
+    "cypress:open": "cypress open --config-file config/cypress.config.js",
+    "cypress:run": "cypress run --config-file config/cypress.config.js",
+    "test:ui": "cypress run --config-file config/cypress.config.js --spec 'e2e/**/*.cy.js'",
+    "test:api": "jest --config config/jest.config.js",
+    "test:api:watch": "jest --config config/jest.config.js --watch",
+    "test:all": "npm run test:ui && npm run test:api",
+    "test:coverage": "jest --config config/jest.config.js --coverage",
+    "install:deps": "npm install"
+  },
+  "keywords": [
+    "automation",
+    "testing",
+    "cypress",
+    "jest",
+    "supertest",
+    "e2e",
+    "api"
+  ],
+  "author": "QA Engineer",
+  "license": "MIT",
+  "devDependencies": {
+    "cypress": "^13.6.0",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "@types/jest": "^29.5.8",
+    "@types/supertest": "^2.0.16"
+  }
+}

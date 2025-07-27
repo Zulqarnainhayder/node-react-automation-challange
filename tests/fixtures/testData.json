@@ -1,0 +1,61 @@
+{
+  "validUser": {
+    "username": "test",
+    "password": "password",
+    "email": "test@test.com"
+  },
+  "invalidUsers": [
+    {
+      "username": "wronguser",
+      "password": "wrongpass",
+      "expectedError": "Invalid credentials"
+    },
+    {
+      "username": "test",
+      "password": "wrongpass",
+      "expectedError": "Invalid credentials"
+    },
+    {
+      "username": "",
+      "password": "test",
+      "expectedError": "Username is required"
+    },
+    {
+      "username": "test",
+      "password": "",
+      "expectedError": "Password is required"
+    }
+  ],
+  "testItems": [
+    {
+      "name": "Test Item 1",
+      "description": "This is a test item for automation testing"
+    },
+    {
+      "name": "Test Item 2",
+      "description": "Another test item with different content"
+    },
+    {
+      "name": "Test Item 3",
+      "description": ""
+    },
+    {
+      "name": "Special Characters Test !@#$%",
+      "description": "Testing special characters: <>&\"'"
+    }
+  ],
+  "editedItem": {
+    "name": "Updated Test Item",
+    "description": "This item has been updated during testing"
+  },
+  "apiTestItems": [
+    {
+      "name": "API Test Item 1",
+      "description": "Created via API testing"
+    },
+    {
+      "name": "API Test Item 2",
+      "description": "Another API test item"
+    }
+  ]
+}
