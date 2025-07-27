@@ -1,12 +1,19 @@
-# Dockerfile for Vite + React frontend
-FROM node:20 AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+# Dockerfile for Vite + React frontend (Development Mode)
+FROM node:20
 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose Vite dev server port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
