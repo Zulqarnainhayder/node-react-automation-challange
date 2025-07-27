@@ -1,0 +1,64 @@
+name: Docker Compose Full Stack CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U testuser" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install docker-compose -y
+
+    - name: Build and start containers
+      run: docker compose up -d --build
+
+    - name: Wait for backend to be ready
+      run: |
+        npx wait-on tcp:4000
+
+    - name: Wait for frontend to be ready
+      run: |
+        npx wait-on tcp:3000
+
+    - name: Install test dependencies
+      run: npm install
+      working-directory: tests
+
+    - name: Run backend API tests
+      run: npm run test:api
+      working-directory: tests
+
+    - name: Run Cypress UI tests
+      run: npm run test:ui
+      working-directory: tests
+
+    - name: Stop containers
+      if: always()
+      run: docker compose down
