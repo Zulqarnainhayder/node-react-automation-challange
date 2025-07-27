@@ -8,7 +8,7 @@ global.TEST_TIMEOUT = 30000;
 // Test data
 global.TEST_USER = {
   username: 'test',
-  password: 'test'
+  password: 'password'
 };
 
 global.INVALID_USER = {
