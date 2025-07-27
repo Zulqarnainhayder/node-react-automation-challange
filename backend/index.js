@@ -1,7 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
@@ -24,9 +25,9 @@ const bcrypt = require('bcrypt');
   )`);
 
   // Seed test user if not exists
-  const username = 'test';
-  const password = 'password';
-  const email = 'test@test.com';
+  const username = process.env.SEED_USER_USERNAME || 'test';
+  const password = process.env.SEED_USER_PASSWORD || 'password';
+  const email = process.env.SEED_USER_EMAIL || 'test@test.com';
   const userRes = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
   if (userRes.rows.length === 0) {
     const hashed = await bcrypt.hash(password, 10);
