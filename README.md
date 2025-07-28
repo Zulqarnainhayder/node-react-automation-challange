@@ -35,7 +35,6 @@ docker compose up --build
 ```
 ├── backend/           # Node.js + Express API
 │   ├── src/
-│   ├── tests/
 │   └── package.json
 ├── frontend/          # React frontend
 │   ├── public/
