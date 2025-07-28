@@ -3,11 +3,24 @@
 // Login command
 Cypress.Commands.add('login', (username, password) => {
   cy.log(`Attempting login with username: ${username}, password: ${password}`);
-  cy.visit('/');
-  cy.get('input[name="username"]').clear().type(username);
-  cy.get('input[name="password"]').clear().type(password);
+  cy.visit('/login');
+  cy.get('input[name="username"]').type(username);
+  cy.get('input[name="password"]').type(password);
+  cy.window().then((win) => {
+    const apiUrl = win?.__vite__ ? win.__vite__.env?.VITE_API_URL : undefined;
+    cy.log(`VITE_API_URL in window: ${apiUrl}`);
+  });
+  cy.intercept('POST', '**/login').as('loginRequest');
   cy.get('button[type="submit"]').click();
   cy.log('Login form submitted');
+  cy.wait('@loginRequest').then((interception) => {
+    cy.log(`Login request URL: ${interception.request.url}`);
+    cy.log(`Login request body: ${JSON.stringify(interception.request.body)}`);
+    cy.log(`Login response status: ${interception.response && interception.response.statusCode}`);
+    cy.log(`Login response body: ${JSON.stringify(interception.response && interception.response.body)}`);
+  }).catch((error) => {
+    cy.log(`Error occurred during login: ${error.message}`);
+  });
 });
 
 // Logout command
