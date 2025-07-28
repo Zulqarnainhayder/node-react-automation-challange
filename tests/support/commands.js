@@ -2,10 +2,12 @@
 
 // Login command
 Cypress.Commands.add('login', (username, password) => {
+  cy.log(`Attempting login with username: ${username}, password: ${password}`);
   cy.visit('/');
   cy.get('input[name="username"]').clear().type(username);
   cy.get('input[name="password"]').clear().type(password);
   cy.get('button[type="submit"]').click();
+  cy.log('Login form submitted');
 });
 
 // Logout command
