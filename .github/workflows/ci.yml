@@ -1,84 +1,70 @@
-name: CI/CD Pipeline
+name: Docker Compose Full Stack CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main]
   pull_request:
-    branches: [ main, master ]
+    branches: [main]
 
 jobs:
-  test:
-    name: Run Tests
+  build-test:
     runs-on: ubuntu-latest
-    
+
     services:
-      postgres:
+      db:
         image: postgres:15
         env:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpass
           POSTGRES_DB: testdb
         ports:
-          - 5432:5432
+          - 5433:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="pg_isready -U testuser" --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
-        cache: 'npm'
+        node-version: 18
 
-    - name: Set up environment variables
+    - name: Install Docker Compose
       run: |
-        # Backend environment
-        echo "DATABASE_URL=postgres://testuser:testpass@localhost:5432/testdb" > backend/.env
-        echo "JWT_SECRET=test-secret" >> backend/.env
-        echo "SEED_USER_USERNAME=test" >> backend/.env
-        echo "SEED_USER_PASSWORD=password" >> backend/.env
-        echo "SEED_USER_EMAIL=test@test.com" >> backend/.env
-        
-        # Frontend environment (using localhost since we're running everything in the same workflow)
-        echo "VITE_API_URL=http://localhost:4000" > frontend/.env
+        sudo apt-get update
+        sudo apt-get install docker-compose -y
 
-    - name: Install dependencies
+    - name: Create backend .env for CI
+      run: cp backend/.env.ci backend/.env
+
+    - name: Create frontend .env for CI
+      run: cp frontend/.env.ci frontend/.env
+
+    - name: Build and start containers
+      run: docker compose up -d --build
+
+    - name: Wait for backend to be ready
       run: |
-        cd backend && npm ci
-        cd ../frontend && npm ci
-        cd ../tests && npm ci
+        npx wait-on tcp:4000
 
-    - name: Start Backend
-      working-directory: ./backend
+    - name: Wait for frontend to be ready
       run: |
-        npm run migrate
-        npm start &
-        sleep 5  # Give backend time to start
+        npx wait-on tcp:3000
 
-    - name: Start Frontend
-      working-directory: ./frontend
-      run: |
-        npm run build
-        npm run preview -- --port 3000 &
-        sleep 5  # Give frontend time to start
+    - name: Install test dependencies
+      run: npm install
+      working-directory: tests
 
-    - name: Run Cypress Tests
-      working-directory: ./tests
-      run: |
-        npm run test:ui
+    - name: Run backend API tests
+      run: npm run test:api
+      working-directory: tests
 
-    - name: Upload Test Results
+    - name: Run Cypress UI tests
+      run: npm run test:ui
+      working-directory: tests
+
+    - name: Stop containers
       if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: cypress-screenshots
-        path: |
-          tests/screenshots/
-          tests/videos/
-        retention-days: 7
+      run: docker compose down
