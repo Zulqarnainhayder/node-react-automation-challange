@@ -1,4 +1,4 @@
-const API_URL = 'http://backend:4000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 class ApiService {
   // Get token from localStorage
