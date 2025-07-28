@@ -18,8 +18,6 @@ Cypress.Commands.add('login', (username, password) => {
     cy.log(`Login request body: ${JSON.stringify(interception.request.body)}`);
     cy.log(`Login response status: ${interception.response && interception.response.statusCode}`);
     cy.log(`Login response body: ${JSON.stringify(interception.response && interception.response.body)}`);
-  }).catch((error) => {
-    cy.log(`Error occurred during login: ${error.message}`);
   });
 });
 
